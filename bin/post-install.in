@@ -18,5 +18,7 @@
 # along with Hypertable. If not, see <http://www.gnu.org/licenses/>
 #
 
-# deb pre-remove/purge script
-@CMAKE_INSTALL_PREFIX@/bin/prerm.sh || exit 0
+# post-install/purge script
+if [ -e @CMAKE_INSTALL_PREFIX@/bin/post-install.sh ]; then
+  @CMAKE_INSTALL_PREFIX@/bin/post-install.sh || exit 0
+fi

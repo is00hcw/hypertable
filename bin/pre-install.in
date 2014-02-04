@@ -18,5 +18,7 @@
 # along with Hypertable. If not, see <http://www.gnu.org/licenses/>
 #
 
-# remove the symlinks that could cause troubles for package managers.
-rm -f /opt/hypertable/@VERSION@/{hyperspace,fs,run,log,conf}
+# pre-install/purge script
+if [ -e @CMAKE_INSTALL_PREFIX@/bin/pre-install.sh ]; then
+  @CMAKE_INSTALL_PREFIX@/bin/pre-install.sh || exit 0
+fi
