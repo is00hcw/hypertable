@@ -239,6 +239,7 @@ endif ()
 configure_file(bin/ht.in ht @ONLY)
 configure_file(bin/postinst.in postinst @ONLY)
 configure_file(bin/preinst.in preinst @ONLY)
+configure_file(bin/prerm.in prerm @ONLY)
 
 file(GLOB CONFS conf/[^.]*)
 install(FILES ${CONFS} DESTINATION conf)

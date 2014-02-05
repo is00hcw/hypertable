@@ -201,7 +201,7 @@ set(CPACK_PACKAGING_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
 
 # Debian pakcage variables
 set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA
-    "${CMAKE_BINARY_DIR}/preinst;${CMAKE_BINARY_DIR}/postinst;")
+    "${CMAKE_BINARY_DIR}/prerm;${CMAKE_BINARY_DIR}/postinst;")
 
 # RPM package variables
 

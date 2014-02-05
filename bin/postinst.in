@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash -x
 #
 # Copyright (C) 2007-2012 Hypertable, Inc.
 #
@@ -18,7 +18,29 @@
 # along with Hypertable. If not, see <http://www.gnu.org/licenses/>
 #
 
-# post-install/purge script
-if [ -e @CMAKE_INSTALL_PREFIX@/bin/post-install.sh ]; then
-  @CMAKE_INSTALL_PREFIX@/bin/post-install.sh || exit 0
+# set "current" link
+pushd .
+cd /opt/hypertable/
+if [ -h current ]; then
+  rm -f current
+fi
+ln -s @VERSION@ current
+popd
+
+if [ -d /tmp/hypertable-install ]; then
+
+  # fixup symlinks
+  if [ -e /tmp/hypertable-install/post.sh ]; then
+    /tmp/hypertable-install/post.sh
+  fi
+  
+  # config files
+  if ls /tmp/hypertable-install/*.cfg > /dev/null 2>&1; then
+    cp /tmp/hypertable-install/*.cfg @CMAKE_INSTALL_PREFIX@/conf
+  fi
+  
+  # notification script
+  if [ -e /tmp/hypertable-install/notification-hook.sh ]; then
+    cp /tmp/hypertable-install/notification-hook.sh @CMAKE_INSTALL_PREFIX@/conf
+  fi
 fi
