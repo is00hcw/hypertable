@@ -35,6 +35,7 @@ echo "cd /opt/hypertable/$NEWVERSION/" >> $POST_SCRIPT
 
 # conf
 if [ -h $OLD_HOME/conf ]; then
+  echo "rm -rf conf" >> $POST_SCRIPT
   echo "ln -s `readlink $OLD_HOME/conf` conf" >> $POST_SCRIPT
   rm -f $OLD_HOME/conf
 elif [ -d $OLD_HOME/conf ]; then
