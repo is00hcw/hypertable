@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash
 #
 # Copyright (C) 2007-2012 Hypertable, Inc.
 #
@@ -18,15 +18,14 @@
 # along with Hypertable. If not, see <http://www.gnu.org/licenses/>
 #
 
-
 # set "current" link
-pushd .
+pushd . > /dev/null
 cd /opt/hypertable/
 if [ -h current ]; then
   rm -f current
 fi
 ln -s @VERSION@ current
-popd
+popd > /dev/null
 
 if [ -d /tmp/hypertable-install ]; then
 
@@ -39,11 +38,11 @@ if [ -d /tmp/hypertable-install ]; then
     popd > /dev/null
   fi
 
-  # Fixup symlinks
+  # fixup symlinks
   if [ -e /tmp/hypertable-install/post.sh ]; then
     /tmp/hypertable-install/post.sh
   fi
-
+  
   # Restore backup of new conf files (that are not .cfg or notification-hook.sh)
   if [ -e /tmp/hypertable-install/tmp-conf.tgz ]; then
     pushd . > /dev/null
@@ -56,7 +55,7 @@ if [ -d /tmp/hypertable-install ]; then
   if ls /tmp/hypertable-install/*.cfg > /dev/null 2>&1; then
     cp /tmp/hypertable-install/*.cfg @CMAKE_INSTALL_PREFIX@/conf/
   fi
-  
+
   # Copy saved notification script
   if [ -e /tmp/hypertable-install/notification-hook.sh ]; then
     cp /tmp/hypertable-install/notification-hook.sh @CMAKE_INSTALL_PREFIX@/conf/
