@@ -19,23 +19,23 @@
 #
 
 # set "current" link
-pushd .
+pushd . > /dev/null
 cd /opt/hypertable/
 if [ -h current ]; then
   rm -f current
 fi
 ln -s @VERSION@ current
-popd
+popd > /dev/null
 
 if [ -d /tmp/hypertable-install ]; then
 
   # Make backup of new conf files (that are not .cfg or notification-hook.sh)
   rm -f /tmp/hypertable-install/tmp-conf.tgz
   if [ ! -h /opt/hypertable/@VERSION@/conf ] && [ -d /opt/hypertable/@VERSION@/conf ]; then
-    pushd .
+    pushd . > /dev/null
     cd /opt/hypertable/@VERSION@/conf
     tar czf /tmp/hypertable-install/tmp-conf.tgz --exclude=*.cfg --exclude=notification-hook.sh *
-    popd
+    popd > /dev/null
   fi
 
   # fixup symlinks
@@ -43,24 +43,24 @@ if [ -d /tmp/hypertable-install ]; then
     /tmp/hypertable-install/post.sh
   fi
   
-  # config files
+  # Restore backup of new conf files (that are not .cfg or notification-hook.sh)
+  if [ -e /tmp/hypertable-install/tmp-conf.tgz ]; then
+    pushd . > /dev/null
+    cd @CMAKE_INSTALL_PREFIX@/conf/
+    tar xzf /tmp/hypertable-install/tmp-conf.tgz
+    popd > /dev/null
+  fi
+  
+  # Copy saved config files
   if ls /tmp/hypertable-install/*.cfg > /dev/null 2>&1; then
     cp /tmp/hypertable-install/*.cfg @CMAKE_INSTALL_PREFIX@/conf/
   fi
 
-  # Restore backup of new conf files (that are not .cfg or notification-hook.sh)
-  if [ -e /tmp/hypertable-install/tmp-conf.tgz ]; then
-    pushd .
-    cd @CMAKE_INSTALL_PREFIX@/conf/
-    tar xzvf /tmp/hypertable-install/tmp-conf.tgz
-    popd
-  fi
-  
-  # notification script
+  # Copy saved notification script
   if [ -e /tmp/hypertable-install/notification-hook.sh ]; then
     cp /tmp/hypertable-install/notification-hook.sh @CMAKE_INSTALL_PREFIX@/conf/
   fi
 
-  # cleanup
+  # Cleanup
   rm -rf /tmp/hypertable-*
 fi

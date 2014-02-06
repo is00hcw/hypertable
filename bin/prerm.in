@@ -30,7 +30,7 @@ rm -rf /tmp/hypertable-install
 mkdir /tmp/hypertable-install
 
 echo "#\!/bin/bash" | sed 's/\\//g' > $POST_SCRIPT
-echo "pushd ." >> $POST_SCRIPT
+echo "pushd . > /dev/null" >> $POST_SCRIPT
 echo "cd /opt/hypertable/$NEWVERSION/" >> $POST_SCRIPT
 
 # conf
@@ -39,7 +39,7 @@ if [ -h $OLD_HOME/conf ]; then
   echo "ln -s `readlink $OLD_HOME/conf` conf" >> $POST_SCRIPT
   rm -f $OLD_HOME/conf
 elif [ -d $OLD_HOME/conf ]; then
-    if ls $OLD_HOME/conf/*.cfg > /dev/null 2>&1; then
+  if ls $OLD_HOME/conf/*.cfg > /dev/null 2>&1; then
     cp $OLD_HOME/conf/*.cfg /tmp/hypertable-install/
     rm -f $OLD_HOME/conf/*.cfg
   fi
@@ -73,5 +73,5 @@ if [ -h $OLD_HOME/log ]; then
   rm -f $OLD_HOME/log
 fi
 
-echo "popd" >> $POST_SCRIPT
+echo "popd > /dev/null" >> $POST_SCRIPT
 chmod 755 $POST_SCRIPT
