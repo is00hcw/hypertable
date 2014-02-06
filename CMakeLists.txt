@@ -238,7 +238,6 @@ endif ()
 
 configure_file(bin/ht.in ht @ONLY)
 configure_file(bin/postinst.in postinst @ONLY)
-configure_file(bin/preinst.in preinst @ONLY)
 configure_file(bin/prerm.in prerm @ONLY)
 
 file(GLOB CONFS conf/[^.]*)
@@ -297,7 +296,7 @@ if (NOT HT_COMPONENT_INSTALL)
           USE_SOURCE_PERMISSIONS)
   include(PackageHelper)
 else ()
-  install(PROGRAMS bin/ht-env.sh bin/fhsize.sh bin/preinst.sh bin/postinst.sh DESTINATION bin)
+  install(PROGRAMS bin/ht-env.sh bin/fhsize.sh bin/rpm_pre_install.sh bin/rpm_post_install.sh DESTINATION bin)
 endif ()
 
 install(PROGRAMS "${CRONOLOG_DIR}/cronolog" DESTINATION bin)

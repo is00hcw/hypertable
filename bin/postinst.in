@@ -36,11 +36,11 @@ if [ -d /tmp/hypertable-install ]; then
   
   # config files
   if ls /tmp/hypertable-install/*.cfg > /dev/null 2>&1; then
-    cp /tmp/hypertable-install/*.cfg @CMAKE_INSTALL_PREFIX@/conf
+    cp /tmp/hypertable-install/*.cfg @CMAKE_INSTALL_PREFIX@/conf/
   fi
   
   # notification script
   if [ -e /tmp/hypertable-install/notification-hook.sh ]; then
-    cp /tmp/hypertable-install/notification-hook.sh @CMAKE_INSTALL_PREFIX@/conf
+    cp /tmp/hypertable-install/notification-hook.sh @CMAKE_INSTALL_PREFIX@/conf/
   fi
 fi

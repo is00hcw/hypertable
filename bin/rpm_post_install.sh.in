@@ -18,11 +18,15 @@
 # along with Hypertable. If not, see <http://www.gnu.org/licenses/>
 #
 
+
 # set "current" link
-if [ -h /opt/hypertable/current ]; then
-  rm -f /opt/hypertable/current
-  ln -s /opt/hypertable/@VERSION@ /opt/hypertable/current
+pushd .
+cd /opt/hypertable/
+if [ -h current ]; then
+  rm -f current
 fi
+ln -s @VERSION@ current
+popd
 
 if [ -d /tmp/hypertable-install ]; then
 
@@ -33,12 +37,11 @@ if [ -d /tmp/hypertable-install ]; then
   
   # config files
   if ls /tmp/hypertable-install/*.cfg > /dev/null 2>&1; then
-    cp /tmp/hypertable-install/*.cfg /opt/hypertable/@VERSION@/conf
+    cp /tmp/hypertable-install/*.cfg @CMAKE_INSTALL_PREFIX@/conf/
   fi
   
   # notification script
   if [ -e /tmp/hypertable-install/notification-hook.sh ]; then
-    cp /tmp/hypertable-install/notification-hook.sh /opt/hypertable/@VERSION@/conf
+    cp /tmp/hypertable-install/notification-hook.sh @CMAKE_INSTALL_PREFIX@/conf/
   fi
-
-fi  
+fi
