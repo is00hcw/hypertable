@@ -226,7 +226,7 @@ void DefaultPolicy::init_options() {
         "Rename files with .deleted extension instead of removing (for testing)")
     ("DfsBroker.Local.DirectIO", boo()->default_value(false),
         "Read and write files using direct i/o")
-    ("DfsBroker.Local.Port", i16()->default_value(38030),
+    ("DfsBroker.Local.Port", i16()->default_value(15863),
         "Port number on which to listen (read by LocalBroker only)")
     ("DfsBroker.Local.Root", str(), "Root of file and directory "
         "hierarchy for local broker (if relative path, then is relative to "
@@ -237,7 +237,7 @@ void DefaultPolicy::init_options() {
         "Number of local broker communication reactor threads created")
     ("DfsBroker.Host", str()->default_value("localhost"),
         "Host on which the DFS broker is running (read by clients only)")
-    ("DfsBroker.Port", i16()->default_value(38030),
+    ("DfsBroker.Port", i16()->default_value(15863),
         "Port number on which DFS broker is listening (read by clients only)")
     ("DfsBroker.Timeout", i32(), "Length of time, "
         "in milliseconds, to wait before timing out DFS Broker requests. This "
