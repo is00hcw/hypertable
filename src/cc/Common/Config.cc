@@ -255,9 +255,9 @@ void DefaultPolicy::init_options() {
     ("Hyperspace.LogGc.MaxUnusedLogs", i32()->default_value(200), "Number of unused BerkeleyDB "
         " to keep around in case of lagging replicas")
     ("Hyperspace.Replica.Host", strs(), "Hostname of Hyperspace replica")
-    ("Hyperspace.Replica.Port", i16()->default_value(38040),
+    ("Hyperspace.Replica.Port", i16()->default_value(15861),
         "Port number on which Hyperspace is or should be listening for requests")
-    ("Hyperspace.Replica.Replication.Port", i16()->default_value(38041),
+    ("Hyperspace.Replica.Replication.Port", i16()->default_value(15862),
         "Hyperspace replication port ")
     ("Hyperspace.Replica.Replication.Timeout", i32()->default_value(10000),
         "Hyperspace replication master dies if it doesn't receive replication acknowledgement "

@@ -274,6 +274,11 @@ int main(int argc, char **argv) {
     context = new Context(properties);
     context->test_mode = true;
 
+    // Default Hyperspace replicat host
+    std::vector<String> replicas;
+    replicas.push_back("localhost");
+    context->props->set("Hyperspace.Replica.Host", replicas);
+
     context->comm = Comm::instance();
     context->conn_manager = new ConnectionManager(context->comm);
     context->hyperspace = new Hyperspace::Session(context->comm, context->props);
