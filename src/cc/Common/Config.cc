@@ -364,7 +364,7 @@ void DefaultPolicy::init_options() {
     ("Hypertable.RangeServer.MemoryLimit.EnsureUnused", i64(), "Amount of unused physical memory")
     ("Hypertable.RangeServer.MemoryLimit.EnsureUnused.Percentage", i32(),
      "Amount of unused physical memory specified as percentage of physical RAM")
-    ("Hypertable.RangeServer.Port", i16()->default_value(38060),
+    ("Hypertable.RangeServer.Port", i16()->default_value(15865),
         "Port number on which range servers are or should be listening")
     ("Hypertable.RangeServer.AccessGroup.CellCache.PageSize",
      i32()->default_value(512*KiB), "Page size for CellCache pool allocator")

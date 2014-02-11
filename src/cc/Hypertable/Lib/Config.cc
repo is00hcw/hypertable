@@ -41,12 +41,19 @@ void init_master_client_options() {
 }
 
 void init_master_client() {
-  properties->set("master-host", String("localhost"));
+  if (properties->has("master")) {
+    Endpoint e = InetAddr::parse_endpoint(get_str("master"));
+    bool defaulted = properties->defaulted("master");
+    properties->set("master-host", e.host, defaulted);
+    properties->set("master-port", e.port, !e.port || defaulted);
+  }
+  else
+    properties->set("master-host", String("localhost"));
 }
 
 void init_range_server_client_options() {
   cmdline_desc().add_options()
-    ("range-server", str()->default_value("localhost:38060"),
+    ("range-server", str(),
         "range server to connect in <host:port> format")
     ;
   // hidden aliases
@@ -54,10 +61,14 @@ void init_range_server_client_options() {
 }
 
 void init_range_server_client() {
-  Endpoint e = InetAddr::parse_endpoint(get_str("range-server"));
-  bool defaulted = properties->defaulted("range-server");
-  properties->set("rs-host", e.host, defaulted);
-  properties->set("rs-port", e.port, !e.port || defaulted);
+  if (properties->has("range-server")) {
+    Endpoint e = InetAddr::parse_endpoint(get_str("range-server"));
+    bool defaulted = properties->defaulted("range-server");
+    properties->set("rs-host", e.host, defaulted);
+    properties->set("rs-port", e.port, !e.port || defaulted);
+  }
+  else
+    properties->set("rs-host", String("localhost"));
 }
 
 }} // namespace Hypertable::Config
