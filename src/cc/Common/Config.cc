@@ -318,7 +318,7 @@ void DefaultPolicy::init_options() {
         "Size of range location cache in number of entries")
     ("Hypertable.Master.Host", str(),
         "Host on which Hypertable Master is running")
-    ("Hypertable.Master.Port", i16()->default_value(38050),
+    ("Hypertable.Master.Port", i16()->default_value(15864),
         "Port number on which Hypertable Master is or should be listening")
     ("Hypertable.Master.Workers", i32()->default_value(100),
         "Number of Hypertable Master worker threads created")

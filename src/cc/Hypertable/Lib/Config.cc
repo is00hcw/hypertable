@@ -32,7 +32,7 @@ void init_command_shell_options() {
 
 void init_master_client_options() {
   cmdline_desc().add_options()
-    ("master", str()->default_value("localhost:38050"),
+    ("master", str(),
         "master server to connect in <host:port> format")
     ;
   // hidden aliases
@@ -41,10 +41,7 @@ void init_master_client_options() {
 }
 
 void init_master_client() {
-  Endpoint e = InetAddr::parse_endpoint(get_str("master"));
-  bool defaulted = properties->defaulted("master");
-  properties->set("master-host", e.host, defaulted);
-  properties->set("master-port", e.port, !e.port || defaulted);
+  properties->set("master-host", String("localhost"));
 }
 
 void init_range_server_client_options() {
