@@ -119,8 +119,18 @@ void QfsBroker::seek(ResponseCallback *cb, uint32_t fd, uint64_t offset) {
 
 void QfsBroker::read(ResponseCallbackRead *cb, uint32_t fd, uint32_t amount) {
   uint64_t offset = m_client->Tell(fd);
+  HT_INFOF("read(fd=%d, amount=%lu, id=%lu, gid=%lu, offset=%llu)", (int)fd,
+           (unsigned long)amount,
+           (unsigned long)cb->get_event()->header.id,
+           (unsigned long)cb->get_event()->header.gid,
+           (Llu)offset);
   StaticBuffer buf((size_t)amount, (size_t)HT_DIRECT_IO_ALIGNMENT);
   int len = m_client->Read(fd, reinterpret_cast<char*>(buf.base), amount);
+  HT_INFOF("read(fd=%d, amount=%lu, id=%lu, gid=%lu, offset=%llu) = %d", (int)fd,
+           (unsigned long)amount,
+           (unsigned long)cb->get_event()->header.id,
+           (unsigned long)cb->get_event()->header.gid,
+           (Llu)offset, len);
   if(len<0) {
     HT_ERRORF("read(%d,%lld) failure (%d) - %s", (int)fd, (Lld)amount, -len, KFS::ErrorCodeToStr(len).c_str());
     report_error(cb, len);

@@ -1,4 +1,4 @@
-/**
+/* -*- c++ -*-
  * Copyright (C) 2007-2012 Hypertable, Inc.
  *
  * This file is part of Hypertable.
@@ -21,13 +21,15 @@
 #ifndef HYPERTABLE_CLIENTBUFFEREDREADERHANDLER_H
 #define HYPERTABLE_CLIENTBUFFEREDREADERHANDLER_H
 
-#include <queue>
+#include <Common/Error.h>
+#include <Common/Mutex.h>
+#include <Common/String.h>
+
+#include <AsyncComm/DispatchHandler.h>
 
 #include <boost/thread/condition.hpp>
 
-#include "Common/Mutex.h"
-#include "Common/String.h"
-#include "AsyncComm/DispatchHandler.h"
+#include <queue>
 
 namespace Hypertable {
 
@@ -39,8 +41,8 @@ namespace Hypertable {
 
   public:
     ClientBufferedReaderHandler(DfsBroker::Client *client, uint32_t fd,
-        uint32_t buf_size, uint32_t outstanding, uint64_t start_offset,
-        uint64_t end_offset);
+                                uint32_t buf_size, uint32_t outstanding,
+                                uint64_t start_offset, uint64_t end_offset);
 
     virtual ~ClientBufferedReaderHandler();
 
@@ -52,22 +54,53 @@ namespace Hypertable {
 
     void read_ahead();
 
-    Mutex                m_mutex;
-    boost::condition     m_cond;
+    /// %Mutex for serializing access to data members
+    Mutex m_mutex;
+
+    /// %Condition variable
+    boost::condition m_cond;
+
+    /// %Queue of read response events from DfsBroker
     std::queue<EventPtr> m_queue;
-    DfsBroker::Client   *m_client;
-    uint32_t             m_fd;
-    uint32_t             m_max_outstanding;
-    uint32_t             m_read_size;
-    uint32_t             m_outstanding;
-    bool                 m_eof;
-    int                  m_error;
-    std::string          m_error_msg;
-    uint8_t             *m_ptr;
-    uint8_t             *m_end_ptr;
-    uint64_t             m_end_offset;
-    uint64_t             m_outstanding_offset;
-    uint64_t             m_actual_offset;
+
+    /// %Client handle to DfsBroker
+    DfsBroker::Client *m_client;
+
+    /// %File descriptor
+    uint32_t m_fd;
+
+    /// Maximum number of outstanding requests
+    uint32_t m_max_outstanding;
+
+    /// Size of each read request
+    uint32_t m_read_size;
+
+    /// Number of requests currently outstanding
+    uint32_t m_outstanding;
+
+    /// %Flag indicating if EOF has been reached
+    bool m_eof {false};
+
+    /// %Error code set in handle() to be thrown back to client
+    int m_error {Error::OK};
+
+    /// %Error message set in handle() to be thrown back to client
+    std::string m_error_msg;
+
+    /// Pointer to next read position in current response buffer
+    uint8_t *m_ptr;
+
+    /// Pointer to end posiiton in current response buffer
+    uint8_t *m_end_ptr;
+
+    /// Logical end offset within file of requested read
+    uint64_t m_end_offset;
+
+    /// Offset within file of data successfully read plus outstanding reads
+    uint64_t m_outstanding_offset;
+    
+    /// Offset within file of data successfully fetched from DfsBroker
+    uint64_t m_actual_offset;
   };
 
 }

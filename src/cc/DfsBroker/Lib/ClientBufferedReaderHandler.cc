@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2007-2012 Hypertable, Inc.
+/*
+ * Copyright (C) 2007-2014 Hypertable, Inc.
  *
  * This file is part of Hypertable.
  *
@@ -19,12 +19,10 @@
  * 02110-1301, USA.
  */
 
-#include "Common/Compat.h"
+#include <Common/Compat.h>
 
-#include "Common/Error.h"
-
-#include "ClientBufferedReaderHandler.h"
-#include "Client.h"
+#include <DfsBroker/Lib/ClientBufferedReaderHandler.h>
+#include <DfsBroker/Lib/Client.h>
 
 using namespace Hypertable;
 using namespace DfsBroker;
@@ -33,10 +31,9 @@ using namespace DfsBroker;
  *
  */
 ClientBufferedReaderHandler::ClientBufferedReaderHandler(
-    DfsBroker::Client *client, uint32_t fd, uint32_t buf_size,
-    uint32_t outstanding, uint64_t start_offset, uint64_t end_offset) :
-    m_client(client), m_fd(fd), m_read_size(buf_size), m_eof(false),
-    m_error(Error::OK) {
+             DfsBroker::Client *client, uint32_t fd, uint32_t buf_size,
+             uint32_t outstanding, uint64_t start_offset, uint64_t end_offset) :
+  m_client(client), m_fd(fd), m_read_size(buf_size) {
 
   m_max_outstanding = outstanding;
   m_end_offset = end_offset;
@@ -115,6 +112,7 @@ void ClientBufferedReaderHandler::handle(EventPtr &event_ptr) {
 
     uint64_t offset;
     size_t amount = Client::decode_response_read_header(event_ptr, &offset);
+    HT_ASSERT(m_actual_offset == offset);
     m_actual_offset += amount;
 
     if (amount < m_read_size) {
