@@ -61,6 +61,7 @@ RangeServerConnection.cc
 RangeServerConnectionManager.cc
 ReferenceManager.cc
 ResponseManager.cc
+TableParts.cc
 Utility.cc
 SystemState.cc
 )

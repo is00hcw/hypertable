@@ -478,7 +478,8 @@ void create_table_test(ContextPtr &context) {
   expected_servers.push_back("rs1");
   expected_servers.push_back("rs2");
 
-  entities.push_back( new OperationCreateTable(context, "tablefoo", schema_str) );
+  entities.push_back( new OperationCreateTable(context, "tablefoo", schema_str, 
+                                               TableParts(TableParts::ALL)) );
 
   expected_operations.insert( std::pair<String, int32_t>("OperationCreateTable", OperationState::ASSIGN_ID) );
   run_test(context, log_dir, entities, "create-table-INITIAL:throw:0",
@@ -577,8 +578,9 @@ void create_table_with_index_test(ContextPtr &context) {
   expected_servers.push_back("rs1");
   expected_servers.push_back("rs2");
 
-  entities.push_back(new OperationCreateTable(context, 
-                            "tablefoo_index", index_schema_str));
+  entities.push_back(new OperationCreateTable(context, "tablefoo_index",
+                                              index_schema_str,
+                                              TableParts(TableParts::ALL)));
 
   expected_operations.insert(std::pair<String, int32_t>("OperationCreateTable", OperationState::ASSIGN_ID) );
   run_test(context, log_dir, entities, "create-table-INITIAL:throw:0",
