@@ -74,7 +74,6 @@ namespace Hypertable {
 
   class ConnectionHandler;
   class UpdateRecTable;
-  class UpdateThread;
 
   /// @defgroup RangeServer RangeServer
   /// @ingroup Hypertable

@@ -45,7 +45,6 @@
 #include <Hypertable/RangeServer/ReplayBuffer.h>
 #include <Hypertable/RangeServer/ScanContext.h>
 #include <Hypertable/RangeServer/TableSchemaCache.h>
-#include <Hypertable/RangeServer/UpdateThread.h>
 
 #include <Hypertable/Lib/ClusterId.h>
 #include <Hypertable/Lib/CommitLog.h>
@@ -1081,7 +1080,7 @@ RangeServer::compact(ResponseCallback *cb, const TableIdentifier *table,
     HT_INFOF("compacting ranges FLAGS=%s",
              RangeServerProtocol::compact_flags_to_string(flags).c_str());
 
-  if (!m_log_replay_barrier->wait_for_user(cb->get_event()->expiration_time()))
+  if (!m_log_replay_barrier->wait_for_user(cb->event()->deadline()))
     return;
 
   int compaction_type = MaintenanceFlag::COMPACT_MAJOR;
@@ -1247,7 +1246,7 @@ RangeServer::metadata_sync(ResponseCallback *cb, const char *table_id,
              RangeServerProtocol::compact_flags_to_string(flags).c_str(),
              columns_str.c_str());
 
-  if (!m_log_replay_barrier->wait_for_user(cb->get_event()->expiration_time()))
+  if (!m_log_replay_barrier->wait_for_user(cb->event()->deadline()))
     return;
 
   if (!Global::metadata_table) {
@@ -1373,8 +1372,7 @@ RangeServer::create_scanner(ResponseCallbackCreateScanner *cb,
   HT_DEBUG_OUT <<"Creating scanner:\n"<< *table << *range_spec
                << *scan_spec << HT_END;
 
-  if (!m_log_replay_barrier->wait(cb->get_event()->expiration_time(),
-                                table, range_spec))
+  if (!m_log_replay_barrier->wait(cb->event()->deadline(), table, range_spec))
     return;
 
   try {
@@ -1413,7 +1411,7 @@ RangeServer::create_scanner(ResponseCallbackCreateScanner *cb,
                 (Lld)table->generation);
     }
 
-    range->deferred_initialization(cb->get_event()->header.timeout_ms);
+    range->deferred_initialization(cb->event()->header.timeout_ms);
 
     if (!range->increment_scan_counter())
       HT_THROWF(Error::RANGESERVER_RANGE_NOT_FOUND,
@@ -1447,9 +1445,9 @@ RangeServer::create_scanner(ResponseCallbackCreateScanner *cb,
       }
     }
 
-    scan_ctx = new ScanContext(range->get_scan_revision(cb->get_event()->header.timeout_ms),
+    scan_ctx = new ScanContext(range->get_scan_revision(cb->event()->header.timeout_ms),
                                scan_spec, range_spec, schema);
-    scan_ctx->timeout_ms = cb->get_event()->header.timeout_ms;
+    scan_ctx->timeout_ms = cb->event()->header.timeout_ms;
 
     scanner = range->create_scanner(scan_ctx);
 
@@ -1639,8 +1637,7 @@ RangeServer::load_range(ResponseCallback *cb, const TableIdentifier *table,
 
   try {
 
-    if (!m_log_replay_barrier->wait(cb->get_event()->expiration_time(),
-                                  table, range_spec))
+    if (!m_log_replay_barrier->wait(cb->event()->deadline(), table, range_spec))
       return;
 
     is_root = table->is_metadata() && (*range_spec->start_row == 0)
@@ -1662,7 +1659,7 @@ RangeServer::load_range(ResponseCallback *cb, const TableIdentifier *table,
       ((TableIdentifier *)table)->generation = generation;
     }
 
-    table_info->stage_range(range_spec, cb->get_event()->expiration_time());
+    table_info->stage_range(range_spec, cb->event()->deadline());
 
     is_staged = true;
 
@@ -1793,7 +1790,7 @@ RangeServer::load_range(ResponseCallback *cb, const TableIdentifier *table,
     // make sure that we don't have a clock skew
     // poll() timeout is in milliseconds, revision and now is in nanoseconds
     int64_t now = Hypertable::get_ts64();
-    int64_t revision = range->get_scan_revision(cb->get_event()->header.timeout_ms);
+    int64_t revision = range->get_scan_revision(cb->event()->header.timeout_ms);
     if (revision > now) {
       int64_t diff = (revision - now) / 1000000;
       HT_WARNF("Clock skew detected when loading range; waiting for %lld "
@@ -1833,8 +1830,8 @@ RangeServer::acknowledge_load(ResponseCallbackAcknowledgeLoad *cb,
 
   foreach_ht (const QualifiedRangeSpec &rr, ranges) {
 
-    if (!m_log_replay_barrier->wait(cb->get_event()->expiration_time(),
-                                  &rr.table, &rr.range))
+    if (!m_log_replay_barrier->wait(cb->event()->deadline(),
+                                    &rr.table, &rr.range))
       return;
 
     HT_INFOF("Acknowledging range: %s[%s..%s]", rr.table.id,
@@ -1859,7 +1856,7 @@ RangeServer::acknowledge_load(ResponseCallbackAcknowledgeLoad *cb,
     }
 
     try {
-      range->acknowledge_load(cb->get_event()->header.timeout_ms);
+      range->acknowledge_load(cb->event()->header.timeout_ms);
     }
     catch(Exception &e) {
       error_map[rr] = e.code();
@@ -1930,7 +1927,7 @@ RangeServer::commit_log_sync(ResponseCallback *cb,
 
   HT_DEBUG_OUT <<"received commit_log_sync request for table "<< table->id<< HT_END;
 
-  if (!m_log_replay_barrier->wait_for_user(cb->get_event()->expiration_time()))
+  if (!m_log_replay_barrier->wait_for_user(cb->event()->deadline()))
     return;
 
   try {
@@ -1945,7 +1942,7 @@ RangeServer::commit_log_sync(ResponseCallback *cb,
 
     // Check for group commit
     if (schema->get_group_commit_interval() > 0) {
-      group_commit_add(cb->get_event(), cluster_id, schema, table, 0, buffer, 0);
+      group_commit_add(cb->event(), cluster_id, schema, table, 0, buffer, 0);
       return;
     }
 
@@ -1959,12 +1956,12 @@ RangeServer::commit_log_sync(ResponseCallback *cb,
     table_update->sync = true;
     request->buffer = buffer;
     request->count = 0;
-    request->event = cb->get_event();
+    request->event = cb->event();
     table_update->requests.push_back(request);
 
     table_update_vector.push_back(table_update);
 
-    batch_update(table_update_vector, cb->get_event()->expiration_time());
+    batch_update(table_update_vector, cb->event()->deadline());
   }
   catch (Exception &e) {
     HT_ERROR_OUT << "Exception caught: " << e << HT_END;
@@ -1989,7 +1986,7 @@ RangeServer::update(ResponseCallbackUpdate *cb, uint64_t cluster_id,
 
   HT_DEBUG_OUT <<"Update: "<< *table << HT_END;
 
-  if (!m_log_replay_barrier->wait(cb->get_event()->expiration_time(), table))
+  if (!m_log_replay_barrier->wait(cb->event()->deadline(), table))
     return;
 
   if (!m_context->live_map->lookup(table->id, table_update->table_info))
@@ -1999,7 +1996,7 @@ RangeServer::update(ResponseCallbackUpdate *cb, uint64_t cluster_id,
 
   // Check for group commit
   if (schema->get_group_commit_interval() > 0) {
-    group_commit_add(cb->get_event(), cluster_id, schema, table, count, buffer, flags);
+    group_commit_add(cb->event(), cluster_id, schema, table, count, buffer, flags);
     delete table_update;
     return;
   }
@@ -2013,12 +2010,12 @@ RangeServer::update(ResponseCallbackUpdate *cb, uint64_t cluster_id,
   table_update->total_count = count;
   table_update->total_buffer_size = buffer.size;
   table_update->flags = flags;
-  table_update->expire_time = cb->get_event()->expiration_time();
+  table_update->expire_time = cb->event()->deadline();
 
   UpdateRequest *request = new UpdateRequest();
   request->buffer = buffer;
   request->count = count;
-  request->event = cb->get_event();
+  request->event = cb->event();
 
   table_update->requests.push_back(request);
 
@@ -2050,7 +2047,7 @@ RangeServer::drop_table(ResponseCallback *cb, const TableIdentifier *table) {
     return;
   }
 
-  if (!m_log_replay_barrier->wait_for_user(cb->get_event()->expiration_time()))
+  if (!m_log_replay_barrier->wait_for_user(cb->event()->deadline()))
     return;
 
   if (!m_context->live_map->remove(table->id, table_info)) {
@@ -2189,7 +2186,7 @@ RangeServer::dump_pseudo_table(ResponseCallback *cb, const TableIdentifier *tabl
 
   HT_INFOF("dump_psudo_table ID=%s pseudo-table=%s outfile=%s", table->id, pseudo_table, outfile);
 
-  if (!m_log_replay_barrier->wait_for_user(cb->get_event()->expiration_time()))
+  if (!m_log_replay_barrier->wait_for_user(cb->event()->deadline()))
     return;
 
   try {
@@ -2210,7 +2207,7 @@ RangeServer::dump_pseudo_table(ResponseCallback *cb, const TableIdentifier *tabl
       return;
     }
 
-    scan_ctx->timeout_ms = cb->get_event()->header.timeout_ms;
+    scan_ctx->timeout_ms = cb->event()->header.timeout_ms;
 
     table_info->get_ranges(ranges);
     foreach_ht(RangeData &rd, ranges.array) {
@@ -2583,8 +2580,7 @@ RangeServer::drop_range(ResponseCallback *cb, const TableIdentifier *table,
   sout << "drop_range\n"<< *table << *range_spec;
   HT_INFOF("%s", sout.str().c_str());
 
-  if (!m_log_replay_barrier->wait(cb->get_event()->expiration_time(),
-                                table, range_spec))
+  if (!m_log_replay_barrier->wait(cb->event()->deadline(), table, range_spec))
     return;
 
   try {
@@ -2617,8 +2613,7 @@ RangeServer::relinquish_range(ResponseCallback *cb,
   sout << "relinquish_range\n" << *table << *range_spec;
   HT_INFOF("%s", sout.str().c_str());
 
-  if (!m_log_replay_barrier->wait(cb->get_event()->expiration_time(),
-                                table, range_spec))
+  if (!m_log_replay_barrier->wait(cb->event()->deadline(), table, range_spec))
     return;
 
   try {
@@ -2661,7 +2656,7 @@ void RangeServer::replay_fragments(ResponseCallback *cb, int64_t op_id,
   String log_dir = Global::toplevel_dir + "/servers/" + location + "/log/" +
       RangeSpec::type_str(type);
 
-  if (!m_log_replay_barrier->wait_for_user(cb->get_event()->expiration_time()))
+  if (!m_log_replay_barrier->wait_for_user(cb->event()->deadline()))
     return;
 
   HT_INFOF("replay_fragments(id=%lld, %s, plan_generation=%d, num_fragments=%d)",
@@ -2805,7 +2800,7 @@ void RangeServer::phantom_load(ResponseCallback *cb, const String &location,
            " num_ranges=%d", location.c_str(), plan_generation,
            (int)fragments.size(), (int)specs.size());
 
-  if (!m_log_replay_barrier->wait_for_user(cb->get_event()->expiration_time()))
+  if (!m_log_replay_barrier->wait_for_user(cb->event()->deadline()))
     return;
 
   HT_ASSERT(!specs.empty());
@@ -2945,7 +2940,7 @@ void RangeServer::phantom_prepare_ranges(ResponseCallback *cb, int64_t op_id,
            " num_ranges=%d", (Lld)op_id, location.c_str(), plan_generation,
            (int)specs.size());
 
-  if (!m_log_replay_barrier->wait_for_user(cb->get_event()->expiration_time()))
+  if (!m_log_replay_barrier->wait_for_user(cb->event()->deadline()))
     return;
 
   cb->response_ok();
@@ -3165,7 +3160,7 @@ void RangeServer::phantom_commit_ranges(ResponseCallback *cb, int64_t op_id,
            " num_ranges=%d", (Lld)op_id, location.c_str(), plan_generation,
            (int)specs.size());
 
-  if (!m_log_replay_barrier->wait_for_system(cb->get_event()->expiration_time()))
+  if (!m_log_replay_barrier->wait_for_system(cb->event()->deadline()))
     return;
 
   cb->response_ok();
@@ -3379,9 +3374,8 @@ bool RangeServer::live(const QualifiedRangeSpec &spec) {
 
 
 void RangeServer::wait_for_maintenance(ResponseCallback *cb) {
-  boost::xtime expire_time = cb->get_event()->expiration_time();
   HT_INFO("wait_for_maintenance");
-  if (!Global::maintenance_queue->wait_for_empty(expire_time))
+  if (!Global::maintenance_queue->wait_for_empty(cb->event()->deadline()))
     cb->error(Error::REQUEST_TIMEOUT, "");
   cb->response_ok();
 }

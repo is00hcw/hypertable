@@ -43,7 +43,7 @@ GroupCommit::add(EventPtr &event, uint64_t cluster_id, SchemaPtr &schema,
                  StaticBuffer &buffer, uint32_t flags) {
   ScopedLock lock(m_mutex);
   UpdateRequest *request = new UpdateRequest();
-  boost::xtime expire_time = event->expiration_time();
+  boost::xtime expire_time = event->deadline();
   ClusterTableIdPair key = std::make_pair(cluster_id, *table);
 
   key.second.id = m_flyweight_strings.get(table->id);

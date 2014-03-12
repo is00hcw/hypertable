@@ -375,7 +375,7 @@ namespace Hypertable {
      * @param deadline Return if queue not empty by this absolute time
      * @return <i>true</i> if queue empty, <i>false</i> if deadline reached
      */
-    bool wait_for_empty(boost::xtime &deadline) {
+    bool wait_for_empty(boost::xtime deadline) {
       ScopedLock lock(m_state.mutex);
       while (!m_state.queue.empty() || (m_state.inflight > 0)) {
 	if (!m_state.empty_cond.timed_wait(lock, deadline))
