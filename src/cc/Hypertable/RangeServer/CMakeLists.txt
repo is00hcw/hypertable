@@ -69,6 +69,7 @@ KeyDecompressorPrefix.cc
 LiveFileTracker.cc
 LoadMetricsRange.cc
 LocationInitializer.cc
+LogReplayBarrier.cc
 MaintenancePrioritizer.cc
 MaintenancePrioritizerLogCleanup.cc
 MaintenancePrioritizerLowMemory.cc
@@ -138,7 +139,7 @@ TableInfo.cc
 TableInfoMap.cc
 TableSchemaCache.cc
 TimerHandler.cc
-UpdateThread.cc
+UpdatePipeline.cc
 )
 
 if (USE_TCMALLOC)
